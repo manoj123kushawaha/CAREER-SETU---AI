@@ -84,21 +84,54 @@ _use_credentials = ALLOWED_ORIGINS != ["*"]
 
 @app.on_event("startup")
 async def startup_db_client():
-    # Create indexes for performance and uniqueness
     db = get_db()
+    
+    # 1. Verify MongoDB connection
+    try:
+        from .database import client as mongo_client
+    except ImportError:
+        from app.database import client as mongo_client
+    
+    try:
+        await mongo_client.admin.command("ping")
+        logger.info("✅ MongoDB connection: SUCCESS")
+    except Exception as e:
+        logger.error(f"❌ MongoDB connection FAILED: {e}")
+        logger.error("Check MONGO_URL env var on Render dashboard!")
+        return  # Stop startup if DB not reachable
+
+    # 2. Log which database we're connected to
+    logger.info(f"📦 Using database: '{db.name}'")
+
+    # 3. Explicitly create all required collections (safe if already exist)
+    required_collections = [
+        "users",
+        "worker_profiles",
+        "professional_profiles",
+        "customer_profiles",
+        "service_requests",
+        "chat_messages",
+        "reviews",
+    ]
+    existing = await db.list_collection_names()
+    for col in required_collections:
+        if col not in existing:
+            await db.create_collection(col)
+            logger.info(f"  📂 Created collection: {col}")
+        else:
+            logger.info(f"  ✅ Collection exists: {col}")
+
+    # 4. Create indexes (handle duplicate key errors gracefully)
     try:
         await db["users"].create_index("email", unique=True)
-        await db["users"].create_index("phone", unique=True)
-        # await db["users"].create_index([("location", "2dsphere")])
-        
-        await db["worker_profiles"].create_index("user_id", unique=True)
+        await db["users"].create_index("phone", unique=True, sparse=True)
+        await db["worker_profiles"].create_index("user_id", unique=True, sparse=True)
         await db["service_requests"].create_index("customer_id")
         await db["service_requests"].create_index("worker_id")
-        await db["users"].create_index([("latitude", "2dsphere"), ("longitude", "2dsphere")], sparse=True)
-        
-        logger.info("MongoDB indexes verified/created.")
+        logger.info("✅ MongoDB indexes verified/created successfully.")
     except Exception as e:
-        logger.warning(f"Failed to create/verify MongoDB indexes: {e}. Check disk space and permissions.")
+        logger.warning(f"⚠️ Index creation warning (non-fatal): {e}")
+
 
 logger.info(f"CORS Configuration: ORIGINS={ALLOWED_ORIGINS}, CREDENTIALS={_use_credentials}")
 
