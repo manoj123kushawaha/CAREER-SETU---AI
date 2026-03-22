@@ -1,4 +1,4 @@
-# Frontend Dockerfile
+# Frontend Dockerfile — v2 (build cache bust: 2026-03-23)
 FROM node:18-alpine AS builder
 
 WORKDIR /app
