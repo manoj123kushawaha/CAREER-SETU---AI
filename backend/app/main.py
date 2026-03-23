@@ -281,7 +281,9 @@ async def login(credentials: UserLogin):
         "user": user
     }
 
+# Auth & Profile
 @app.get("/api/profile")
+@app.get("/profile")
 async def get_profile(email: str = Depends(get_current_user_email)):
     db = get_db()
     user = await db["users"].find_one({"email": email})
@@ -313,6 +315,7 @@ async def get_profile(email: str = Depends(get_current_user_email)):
     return user
 
 @app.post("/api/profile/update")
+@app.post("/profile/update")
 async def update_profile(
     data: dict = BodyField(...),
     email: str = Depends(get_current_user_email)
@@ -365,6 +368,7 @@ async def update_profile(
 # (Imports moved to top)
 
 @app.post("/api/resume/analyze")
+@app.post("/resume/analyze")
 async def analyze_resume(target_role: Optional[str] = None, file: UploadFile = File(...)):
     content = await file.read()
     filename = file.filename.lower()
@@ -430,7 +434,6 @@ async def get_jobs(skills: str = "Python", location: Optional[str] = None):
         live_jobs = await job_fetcher.fetch_live_jobs(skills, location)
         
         # 2. Match against combined set (semantic ranking)
-        matcher = JobMatcher([r.__dict__ for r in ROLES_DB])
         matcher = JobMatcher([r.__dict__ for r in ROLES_DB])
         results = await matcher.match(skill_list, location, live_jobs)
         

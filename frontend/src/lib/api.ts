@@ -1,28 +1,33 @@
-// Hardcoded production backend URL — used as final fallback
-const PRODUCTION_BACKEND_URL = "https://career-setu-backend.onrender.com";
+// Hardcoded production backend URL — must include /api prefix for this project
+const PRODUCTION_BACKEND_URL = "https://career-setu-backend.onrender.com/api";
 
 const getBaseUrl = (): string => {
-    // NEXT_PUBLIC_API_URL is baked in at build time by Docker/Render
-    const envUrl = process.env.NEXT_PUBLIC_API_URL;
+    // 1. Check Env Var (Highest Priority)
+    let envUrl = process.env.NEXT_PUBLIC_API_URL;
     
+    // 2. If it's a full URL, ensure it has /api prefix for this project's architecture
     if (envUrl && envUrl.startsWith("http")) {
-        // Fully-qualified URL provided — use it directly
-        return envUrl.replace(/\/$/, "");
+        let url = envUrl.trim().replace(/\/$/, "");
+        if (!url.endsWith("/api")) {
+            url = `${url}/api`;
+        }
+        return url;
     }
     
-    if (envUrl && envUrl.trim().length > 0) {
-        // Partial URL without protocol — add https://
-        const cleaned = envUrl.trim().replace(/\/$/, "");
-        return `https://${cleaned}`;
-    }
-    
-    // No env var set at all — decide based on runtime context
+    // 3. Robust Hostname-based Detection for Render
     if (typeof window !== "undefined" && window.location.hostname.includes("onrender.com")) {
-        // Running on Render in production — use hardcoded backend URL
         return PRODUCTION_BACKEND_URL;
     }
     
-    // Local development — use the Next.js dev proxy
+    // 4. Fallback for Partial Env Var (e.g. just the host)
+    if (envUrl && envUrl.trim().length > 0) {
+        let cleaned = envUrl.trim().replace(/\/$/, "");
+        if (!cleaned.startsWith("http")) cleaned = `https://${cleaned}`;
+        if (!cleaned.endsWith("/api")) cleaned = `${cleaned}/api`;
+        return cleaned;
+    }
+
+    // 5. Local Dev Default (relies on Next.js proxy in next.config.mjs)
     return "/api";
 };
 

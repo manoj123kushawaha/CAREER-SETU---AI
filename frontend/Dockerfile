@@ -4,7 +4,7 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Declare build argument FIRST — before anything else
-ARG NEXT_PUBLIC_API_URL=https://career-setu-backend.onrender.com
+ARG NEXT_PUBLIC_API_URL=https://career-setu-backend.onrender.com/api
 # Bake it into the environment for the build step
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
@@ -29,7 +29,7 @@ FROM node:18-alpine AS runner
 WORKDIR /app
 
 # Also set the env var at runtime (Next.js uses it for server-side rendering)
-ENV NEXT_PUBLIC_API_URL=https://career-setu-backend.onrender.com
+ENV NEXT_PUBLIC_API_URL=https://career-setu-backend.onrender.com/api
 
 COPY --from=builder /app/next.config.mjs ./
 COPY --from=builder /app/public ./public
