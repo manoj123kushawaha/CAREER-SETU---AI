@@ -330,11 +330,13 @@ async def update_profile(
     # Update main user doc
     main_fields = [
         "name", "phone", "location", "bio", "skills", "interests", "education",
-        "profile_photo",
+        "profile_photo", "resume_url", "aadhaar_url",
         # Social links
         "linkedin", "github", "portfolio_url",
         # Professional info
         "current_job_title", "industry", "experience_years",
+        # Specialty for workers (shared doc update)
+        "specialty", "description"
     ]
     update_dict = {k: v for k, v in data.items() if k in main_fields}
     if update_dict:

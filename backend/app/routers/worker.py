@@ -80,11 +80,14 @@ async def upload_work_file(
     
     public_url = f"/uploads/chat/{unique_filename}"
     
-    # Append to worker's work_photos array in DB
+    # Categorize based on extension
+    target_field = "work_videos" if file_ext in {".mp4", ".webm"} else "work_photos"
+    
+    # Push to correct array in DB
     db = get_db()
     await db["worker_profiles"].update_one(
         {"user_id": user["sub"]},
-        {"$push": {"work_photos": public_url}},
+        {"$push": {target_field: public_url}},
         upsert=True
     )
     
