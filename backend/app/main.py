@@ -124,7 +124,15 @@ async def startup_db_client():
     # 4. Create indexes (handle duplicate key errors gracefully)
     try:
         await db["users"].create_index("email", unique=True)
-        await db["users"].create_index("phone", unique=True, sparse=True)
+        # Fix: Existing index might not be sparse, so we try to create it and catch conflicts
+        try:
+            await db["users"].create_index("phone", unique=True, sparse=True)
+        except Exception as e:
+            if "IndexKeySpecsConflict" in str(e):
+                logger.info("  ⚠️ Phone index already exists without sparse=True. Skipping update to avoid downtime.")
+            else:
+                logger.warning(f"  ⚠️ Could not create phone index: {e}")
+        
         await db["worker_profiles"].create_index("user_id", unique=True, sparse=True)
         await db["service_requests"].create_index("customer_id")
         await db["service_requests"].create_index("worker_id")
@@ -184,7 +192,7 @@ interview_engine = InterviewEngine()
 analytics_engine = AnalyticsEngine([r.__dict__ for r in ROLES_DB])
 job_fetcher = JobFetcherService()
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 async def root():
     return {"message": "Welcome to CAREER BRIDGE - AI API"}
 
