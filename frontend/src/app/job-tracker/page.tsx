@@ -49,8 +49,7 @@ export default function JobTrackerPage() {
         }
     }, [jobs, loaded]);
 
-    const handleDragStart = (e: React.DragEvent, id: string) => {
-        setDraggingId(id);
+const handleDragStart = (e: React.DragEvent<HTMLDivElement> | any, id: string) => {        setDraggingId(id);
         e.dataTransfer.effectAllowed = "move";
         // Ghost image transparency fix
         setTimeout(() => setDraggingId(id), 0);
@@ -148,8 +147,7 @@ export default function JobTrackerPage() {
                                                 animate={{ opacity: draggingId === job.id ? 0.5 : 1, scale: 1 }}
                                                 exit={{ opacity: 0, scale: 0.9 }}
                                                 draggable
-                                                onDragStart={(e) => handleDragStart(e as React.DragEvent, job.id)}
-                                                onDragEnd={() => setDraggingId(null)}
+onDragStart={(e) => handleDragStart(e as unknown as React.DragEvent<HTMLDivElement>, job.id)}                                                onDragEnd={() => setDraggingId(null)}
                                                 className="p-4 rounded-xl bg-dark-900 border border-white/5 cursor-grab active:cursor-grabbing hover:border-white/20 transition-colors group relative"
                                             >
                                                 <div className="flex justify-between items-start mb-2">
